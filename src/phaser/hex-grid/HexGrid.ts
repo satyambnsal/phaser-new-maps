@@ -328,13 +328,23 @@ export class HexGrid extends GameObjects.Group {
     ) {
       for (let i = 0; i < 3; i++) {
         this.triPreviews[i].setTexture(
-          ["white", "windmill-bw", "grass-bw", "street-bw"][trihex.hexes[i]]
+          ["white", "windmill-bw", "grass-bw", "street-bw", "", "", "mine-bw"][
+            trihex.hexes[i]
+          ]
         );
       }
     } else {
       for (let i = 0; i < 3; i++) {
         this.triPreviews[i].setTexture(
-          ["white", "windmill-red", "grass-red", "street-red"][trihex.hexes[i]]
+          [
+            "white",
+            "windmill-red",
+            "grass-red",
+            "street-red",
+            "",
+            "",
+            "mine-red",
+          ][trihex.hexes[i]]
         );
       }
     }
@@ -400,6 +410,16 @@ export class HexGrid extends GameObjects.Group {
         });
       }
 
+      for (let i = 0; i < 3; i++) {
+        this.getPointsFor(hexes[i]);
+        // Add this line to check neighboring tiles for potential scoring
+        for (const neighbor of this.neighbors(hexes[i].row, hexes[i].col)) {
+          if (neighbor && neighbor.hexType === 6) {
+            // Check mine tiles
+            this.getPointsFor(neighbor);
+          }
+        }
+      }
       // calculate scores
       for (let i = 0; i < 3; i++) {
         this.getPointsFor(hexes[i]);
@@ -415,7 +435,7 @@ export class HexGrid extends GameObjects.Group {
   }
 
   // returns connected hexes INCLUDING itself
-  getConnected(hex: Hex): Hex[] {
+  getConnected(hex: Hex, checkMines = false): Hex[] {
     const connectedHexes = [];
     const visited = new Set<Hex>();
     const queue = new Queue<Hex>();
@@ -429,8 +449,10 @@ export class HexGrid extends GameObjects.Group {
       for (const n of this.neighbors(h.row, h.col)) {
         if (
           n &&
-          (n.hexType === h.hexType || (h.hexType === 3 && n.hexType === 5)) &&
-          !visited.has(n)
+          !visited.has(n) &&
+          (n.hexType === h.hexType ||
+            (h.hexType === 3 && n.hexType === 5) ||
+            (checkMines && (h.hexType === 6 || n.hexType === 6)))
         ) {
           queue.enq(n);
         }
@@ -464,7 +486,6 @@ export class HexGrid extends GameObjects.Group {
       }
     } else if (hex.hexType === 2) {
       const group = this.getConnected(hex);
-
       const uncountedParks = [];
       for (const park of group) {
         if (!park.counted) uncountedParks.push(park);
@@ -495,6 +516,51 @@ export class HexGrid extends GameObjects.Group {
               new ScorePopper(this.scene, [h], h.hexType === 5 ? 3 : 1)
             );
             h.counted = true;
+          }
+        }
+      }
+    } else if (hex.hexType === 6) {
+      // Mine tile
+      let adjacentToConnectedStreet = false;
+
+      // Check if adjacent to a connected street
+      for (const neighbor of this.neighbors(hex.row, hex.col)) {
+        if (neighbor && neighbor.hexType === 3 && neighbor.counted) {
+          adjacentToConnectedStreet = true;
+          break;
+        }
+      }
+
+      if (adjacentToConnectedStreet && !hex.counted) {
+        // Get connected mines
+        const connectedMines = this.getConnected(hex, true).filter(
+          (mine) => mine.hexType === 6
+        );
+
+        // Count how many mines in this network are already counted
+        const countedMinesInNetwork = connectedMines.filter(
+          (mine) => mine.counted
+        ).length;
+
+        // Determine if this mine is an n+3rd mine (3rd, 6th, 9th, etc.)
+        const isNPlus3rdMine = (countedMinesInNetwork + 1) % 3 === 0;
+
+        // Award points
+        const basePoints = 2;
+        const bonusPoints = isNPlus3rdMine ? 5 : 0;
+        const totalPoints = basePoints + bonusPoints;
+
+        this.scoreQueue.enq(new ScorePopper(this.scene, [hex], totalPoints));
+        hex.counted = true;
+
+        if (isNPlus3rdMine) {
+          hex.upgraded = true; // Mark as part of an Industrial Network
+        }
+
+        // Recursively check other uncounted mines in the network
+        for (const connectedMine of connectedMines) {
+          if (!connectedMine.counted) {
+            this.getPointsFor(connectedMine);
           }
         }
       }
@@ -533,6 +599,9 @@ export class HexGrid extends GameObjects.Group {
         }
         if (p.hexes[0].hexType === 5) {
           this.scene.sound.play("port", { volume: 0.9 });
+        }
+        if (p.hexes[0].hexType === 6) {
+          this.scene.sound.play("digging", { volume: 1 });
         }
       }
     } else if (this.onQueueEmpty) {

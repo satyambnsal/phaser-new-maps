@@ -10,6 +10,12 @@ import {
 import { Button, pick, shuffle } from "../util";
 import { Scene, GameObjects, Input, Math as PhaserMath } from "phaser";
 
+interface Level {
+  hexSize: number;
+  hillsCount: number;
+  deckSize: number;
+  isMineTile: boolean;
+}
 export class MainScene extends Scene {
   grid: HexGrid | null = null;
   foreground: GameObjects.Image | null = null;
@@ -35,8 +41,8 @@ export class MainScene extends Scene {
   // timerText: GameObjects.BitmapText | null = null;
   timerText: Phaser.GameObjects.Text | null = null;
   timedEvent: Phaser.Time.TimerEvent | null = null;
-  timerPositionX =  0;
-  timerPositionY =  0;
+  timerPositionX = 0;
+  timerPositionY = 0;
 
   scoreBackground: Phaser.GameObjects.Graphics | null = null;
   scoreBackgroundPositionX = 0;
@@ -55,6 +61,7 @@ export class MainScene extends Scene {
   competitionNameText: GameObjects.BitmapText | null = null;
   currentTimeText: GameObjects.BitmapText | null = null;
   playAgainButton: GameObjects.BitmapText | null = null;
+  nextLevelButton: GameObjects.BitmapText | null = null;
   shareButton: GameObjects.Image | null = null;
 
   // playAgainButton: Button | null = null;
@@ -62,11 +69,19 @@ export class MainScene extends Scene {
   breakdownHexes: Hex[] = [];
   breakdownTexts: GameObjects.BitmapText[] = [];
 
+  currentLevel = 0;
+  levels: Level[] = [];
+
   constructor() {
     super("main");
   }
 
+  init(data: any) {
+    this.currentLevel = data.level;
+  }
+
   create() {
+    this.levels = JSON.parse(this.cache.text.get("levels")) as Level[];
     const isSpeedVersion = this.game.registry.get("isSpeedVersion");
 
     this.add.rectangle(640, 360, 1280, 720);
@@ -74,66 +89,106 @@ export class MainScene extends Scene {
     bgImage.setScale(0.2);
     bgImage.setAlpha(0.1);
     this.score = 0;
-    this.scoreBreakdown = [0, 0, 0, 0, 0, 0];
+
+    if (this.levels[this.currentLevel - 1].isMineTile) {
+      this.scoreBreakdown = [0, 0, 0, 0, 0, 0, 0, 0];
+    } else {
+      this.scoreBreakdown = [0, 0, 0, 0, 0, 0];
+    }
 
     this.pointerDown = false;
 
-    this.grid = new HexGrid(this, 5, 8, 0, 0, this.onNewPoints.bind(this));
-    this.trihexDeck = this.createTrihexDeck(25, true);
+    this.grid = new HexGrid(
+      this,
+      this.levels[this.currentLevel - 1].hexSize,
+      this.levels[this.currentLevel - 1].hillsCount,
+      0,
+      0,
+      this.onNewPoints.bind(this)
+    );
+    this.trihexDeck = this.createTrihexDeck(
+      this.levels[this.currentLevel - 1].deckSize,
+      true
+    );
 
-    if(isSpeedVersion){
+    if (isSpeedVersion) {
       this.scoreTextPositionX = -40;
       this.scoreBackgroundPositionX = -50;
-    }else{
+    } else {
       this.scoreTextPositionX = 140;
       this.scoreBackgroundPositionX = 130;
     }
-    this.scoreText = this.add.bitmapText(this.scoreTextPositionX, 30, "font", "0 points", 60);
+    this.scoreText = this.add.bitmapText(
+      this.scoreTextPositionX,
+      30,
+      "font",
+      "0 points",
+      60
+    );
     this.scoreText.setDepth(4);
 
     this.scoreBackground = this.add.graphics();
-    this.scoreBackground.fillStyle(0x378209, 0.3); 
-    this.scoreBackground.fillRoundedRect(this.scoreBackgroundPositionX, 25, 225, 80, 8);
+    this.scoreBackground.fillStyle(0x378209, 0.3);
+    this.scoreBackground.fillRoundedRect(
+      this.scoreBackgroundPositionX,
+      25,
+      225,
+      80,
+      8
+    );
     this.scoreBackground.setDepth(3);
 
     this.tweens.add({
       targets: [this.scoreBackground, this.scoreText],
-      props: { x: '+= 800' },
+      props: { x: "+= 800" },
       duration: 400,
     });
 
-    if(isSpeedVersion){
-    this.timerPositionX = 330;
-    this.timerPositionY = 65;
-    const speedDuration = this.game.registry.get("speedDuration");
+    if (isSpeedVersion) {
+      this.timerPositionX = 330;
+      this.timerPositionY = 65;
+      const speedDuration = this.game.registry.get("speedDuration");
 
-    this.timerBackground = this.add.graphics();
-    this.timerBackground.fillStyle(0xeeeeee, 0.3); 
-    this.timerBackground.fillRoundedRect(this.timerPositionX - 140 , this.timerPositionY - 40, 280, 80 , 8);
-    this.timerBackground.setDepth(3);
-    
-    this.tweens.add({
-      targets: [this.timerBackground, this.timerText],
-      props: { x: '+= 800' },
-      duration: 400,
-    });
-    
+      this.timerBackground = this.add.graphics();
+      this.timerBackground.fillStyle(0xeeeeee, 0.3);
+      this.timerBackground.fillRoundedRect(
+        this.timerPositionX - 140,
+        this.timerPositionY - 40,
+        280,
+        80,
+        8
+      );
+      this.timerBackground.setDepth(3);
 
-    if(isSpeedVersion){
-      this.initialTime = speedDuration;
-      this.timerText = this.add.text(this.timerPositionX, this.timerPositionY, `Time Left: ${this.formatTime(this.initialTime)}`, {
-        // fontFamily: 'Arial',
-        fontSize: '30px',
-        fontStyle: 'bold',
-        color: '#378209'
+      this.tweens.add({
+        targets: [this.timerBackground, this.timerText],
+        props: { x: "+= 800" },
+        duration: 400,
       });
-      this.timerText.setDepth(4);
-      this.timerText.setOrigin(0.5);
-      this.timedEvent = this.time.addEvent({ delay: 1000, callback: this.onEvent, callbackScope: this, loop: true });
+
+      if (isSpeedVersion) {
+        this.initialTime = speedDuration;
+        this.timerText = this.add.text(
+          this.timerPositionX,
+          this.timerPositionY,
+          `Time Left: ${this.formatTime(this.initialTime)}`,
+          {
+            // fontFamily: 'Arial',
+            fontSize: "30px",
+            fontStyle: "bold",
+            color: "#378209",
+          }
+        );
+        this.timerText.setDepth(4);
+        this.timerText.setOrigin(0.5);
+        this.timedEvent = this.time.addEvent({
+          delay: 1000,
+          callback: this.onEvent,
+          callbackScope: this,
+          loop: true,
+        });
+      }
     }
-}
-
-
 
     this.rotateLeftButton = new Button(
       this,
@@ -207,15 +262,6 @@ export class MainScene extends Scene {
 
     this.pickNextTrihex();
 
-    // this.foreground = this.add.image(1600, 360, "page");
-    // this.foreground.setDepth(3);
-
-    // this.tweens.add({
-    //   targets: this.foreground,
-    //   props: { x: 2400 },
-    //   duration: 400,
-    // });
-
     this.tweens.add({
       targets: this.rotateLeftButton,
       props: { x: this.rotateLeftButton.x + 800 },
@@ -240,14 +286,13 @@ export class MainScene extends Scene {
       duration: 400,
     });
 
-    if(isSpeedVersion){
-    this.tweens.add({
-      targets: this.timerText,
-      props: { x: (this.timerText?.x ?? 0) + 800 },
-      duration: 400,
-    });
-  }
-
+    if (isSpeedVersion) {
+      this.tweens.add({
+        targets: this.timerText,
+        props: { x: (this.timerText?.x ?? 0) + 800 },
+        duration: 400,
+      });
+    }
 
     this.tweens.add({
       targets: [this.deckCounterText, this.deckCounterImage],
@@ -265,64 +310,73 @@ export class MainScene extends Scene {
     );
 
     this.input.on("wheel", this.onMouseWheel, this);
-
-
-   
-}
-
-
-onEvent() {
-  this.initialTime -= 1; 
-  if (this.timerText) {
-    this.timerText.setText(`Time Left: ${this.formatTime(this.initialTime)}`);
-    if (this.initialTime <= 10) {
-      this.timerText.setColor('#E67E22');
-      this.timerBackground?.fillStyle(0xE67E22, 0.2); // Yellow with 20% opacity
-      this.timerBackground?.fillRoundedRect(this.timerPositionX - 140 + 800, this.timerPositionY - 40, 280, 60 , 10);
-    }
-  
-    if (this.initialTime <= 5) {
-      this.timerText.setColor('#DC143C');
-      this.timerBackground?.fillStyle(0xDC143C, 0.2); // Red with 20% opacity
-      this.timerBackground?.fillRoundedRect(this.timerPositionX - 140 + 800, this.timerPositionY - 40, 280, 60 , 10);
-      this.pulseAndShakeTimer();
-    }
   }
 
-  if(this.initialTime === 0){
-    this.timedEvent?.remove();
-    this.grid!.onQueueEmpty = this.endGame.bind(this);
-    this.grid!.deactivate();
+  onEvent() {
+    this.initialTime -= 1;
     if (this.timerText) {
-      this.timerText.setPosition(this.timerPositionX + 800, this.timerPositionY);
-      this.timerText.setScale(1);
+      this.timerText.setText(`Time Left: ${this.formatTime(this.initialTime)}`);
+      if (this.initialTime <= 10) {
+        this.timerText.setColor("#E67E22");
+        this.timerBackground?.fillStyle(0xe67e22, 0.2); // Yellow with 20% opacity
+        this.timerBackground?.fillRoundedRect(
+          this.timerPositionX - 140 + 800,
+          this.timerPositionY - 40,
+          280,
+          60,
+          10
+        );
+      }
+
+      if (this.initialTime <= 5) {
+        this.timerText.setColor("#DC143C");
+        this.timerBackground?.fillStyle(0xdc143c, 0.2); // Red with 20% opacity
+        this.timerBackground?.fillRoundedRect(
+          this.timerPositionX - 140 + 800,
+          this.timerPositionY - 40,
+          280,
+          60,
+          10
+        );
+        this.pulseAndShakeTimer();
+      }
+    }
+
+    if (this.initialTime === 0) {
+      this.timedEvent?.remove();
+      this.grid!.onQueueEmpty = this.endGame.bind(this);
+      this.grid!.deactivate();
+      if (this.timerText) {
+        this.timerText.setPosition(
+          this.timerPositionX + 800,
+          this.timerPositionY
+        );
+        this.timerText.setScale(1);
+      }
     }
   }
-  
-}
 
-pulseAndShakeTimer() {
-  this.tweens.add({
-    targets: [this.timerText],
-    scale: 1.05,
-    duration: 200,
-    yoyo: true,
-    repeat: 1,
-    ease: 'Sine.easeInOut'
-  });
+  pulseAndShakeTimer() {
+    this.tweens.add({
+      targets: [this.timerText],
+      scale: 1.05,
+      duration: 200,
+      yoyo: true,
+      repeat: 1,
+      ease: "Sine.easeInOut",
+    });
 
-  this.tweens.add({
-    targets: [this.timerText],
-    x: this.timerPositionX + 800 + Phaser.Math.Between(-6, 6),
-    
-    y: this.timerPositionY + Phaser.Math.Between(-6, 6),
-    duration: 50,
-    yoyo: true,
-    repeat: 3,
-    ease: 'Sine.easeInOut'
-  });
+    this.tweens.add({
+      targets: [this.timerText],
+      x: this.timerPositionX + 800 + Phaser.Math.Between(-6, 6),
 
-}
+      y: this.timerPositionY + Phaser.Math.Between(-6, 6),
+      duration: 50,
+      yoyo: true,
+      repeat: 3,
+      ease: "Sine.easeInOut",
+    });
+  }
 
   onNewPoints(points: number, hexType: number) {
     this.score += points;
@@ -421,13 +475,26 @@ pulseAndShakeTimer() {
       }
     }
     deck = shuffle(deck);
-    for (let i = 0; i < size; i++) {
-      if (i < size / 2) {
-        deck[i].hexes[1] = 3;
-      } else {
-        deck[i].hexes[1] = 2;
+    if (this.levels[this.currentLevel - 1].isMineTile) {
+      for (let i = 0; i < size; i++) {
+        if (i < (3 * size) / 10) {
+          deck[i].hexes[1] = 3;
+        } else if (i < size / 2) {
+          deck[i].hexes[1] = 6;
+        } else {
+          deck[i].hexes[1] = 2;
+        }
+      }
+    } else {
+      for (let i = 0; i < size; i++) {
+        if (i < size / 2) {
+          deck[i].hexes[1] = 3;
+        } else {
+          deck[i].hexes[1] = 2;
+        }
       }
     }
+
     deck = shuffle(deck);
     for (let i = 0; i < size; i++) {
       if (i < size / 2) {
@@ -504,12 +571,8 @@ pulseAndShakeTimer() {
 
     const isSpeedVersion = this.game.registry.get("isSpeedVersion");
 
-      if(isSpeedVersion){
-          this.timedEvent?.remove();
-      }
-
-    if (this.scoreText) {
-      console.log("data send to database");
+    if (isSpeedVersion) {
+      this.timedEvent?.remove();
     }
 
     this.grid!.sinkBlanks();
@@ -543,7 +606,7 @@ pulseAndShakeTimer() {
       ease: PhaserMath.Easing.Quadratic.Out,
     });
 
-    if(isSpeedVersion){
+    if (isSpeedVersion) {
       this.tweens.add({
         targets: this.timerText,
         props: {
@@ -553,7 +616,6 @@ pulseAndShakeTimer() {
         ease: PhaserMath.Easing.Quadratic.Out,
       });
     }
-
 
     this.tweens.add({
       targets: [this.scoreText],
@@ -572,7 +634,7 @@ pulseAndShakeTimer() {
       duration: 700,
       ease: PhaserMath.Easing.Quadratic.Out,
     });
-    
+
     // Also in endGame(), update the timer text tween:
     this.tweens.add({
       targets: [this.timerText],
@@ -591,8 +653,6 @@ pulseAndShakeTimer() {
       duration: 700,
       ease: PhaserMath.Easing.Quadratic.Out,
     });
-    
-    
 
     let rank, message1, message2;
     if (this.score === 0) {
@@ -642,20 +702,20 @@ pulseAndShakeTimer() {
       message2 = "(This is the highest rank!)";
     }
 
-    this.gameOverText = this.add.bitmapText(1500, 70, "font", message1, 60);
+    this.gameOverText = this.add.bitmapText(1625, 70, "font", message1, 60);
     this.gameOverText.setOrigin(0.5);
     this.gameOverText.setDepth(4);
 
-    this.rankText = this.add.bitmapText(1500, 460, "font", rank, 60);
+    this.rankText = this.add.bitmapText(1625, 460, "font", rank, 60);
     this.rankText.setOrigin(0.5);
     this.rankText.setDepth(4);
 
-    this.nextRankText = this.add.bitmapText(1500, 520, "font", message2, 40);
+    this.nextRankText = this.add.bitmapText(1625, 520, "font", message2, 40);
     this.nextRankText.setOrigin(0.5);
     this.nextRankText.setDepth(4);
 
     this.competitionNameText = this.add.bitmapText(
-      1500,
+      1625,
       570,
       "font",
       `Competition Key: ${competitionKey}`,
@@ -666,7 +726,7 @@ pulseAndShakeTimer() {
 
     const currentTime: string = this.getGameStartTime();
     this.currentTimeText = this.add.bitmapText(
-      1500,
+      1625,
       590,
       "font",
       `Played At: ${currentTime}`,
@@ -677,7 +737,7 @@ pulseAndShakeTimer() {
 
     if (isDemoGame) {
       this.playAgainButton = this.add
-        .bitmapText(1400, 630, "font", "Play Again", 40)
+        .bitmapText(1525, 630, "font", "Play Again", 40)
         .setInteractive({ useHandCursor: true })
         .setOrigin(0.5)
         .on("pointerover", () => {
@@ -723,8 +783,51 @@ pulseAndShakeTimer() {
         .setDepth(4);
     }
 
+    this.nextLevelButton = this.add
+      .bitmapText(1525, 410, "font", "Next Round", 40)
+      .setInteractive({ useHandCursor: true })
+      .setOrigin(0.5)
+      .on("pointerover", () => {
+        this.tweens.add({
+          targets: this.nextLevelButton,
+          scaleX: 1.1,
+          scaleY: 1.1,
+          duration: 60,
+          ease: "Linear",
+        });
+      })
+      .on("pointerover", () => {
+        this.tweens.add({
+          targets: this.nextLevelButton,
+          scaleX: 1.1,
+          scaleY: 1.1,
+          duration: 60,
+          ease: "Linear",
+        });
+      })
+      .on("pointerout", () =>
+        this.tweens.add({
+          targets: this.nextLevelButton,
+          scaleX: 1,
+          scaleY: 1,
+          duration: 60,
+          ease: "Linear",
+        })
+      )
+      .on("pointerdown", () => {
+        this.tweens.add({
+          targets: this.nextLevelButton,
+          scaleX: 1.1,
+          scaleY: 1.1,
+          duration: 60,
+          ease: "Linear",
+        });
+        this.nextRound();
+      })
+      .setDepth(4);
+
     this.shareButton = this.add
-      .image(1450, 700, "share-score-button")
+      .image(1575, 700, "share-score-button")
       .setInteractive({ useHandCursor: true })
       .on("pointerover", () => {
         this.tweens.add({
@@ -773,13 +876,19 @@ pulseAndShakeTimer() {
       })
       .setDepth(4);
 
-    this.breakdownContainer = this.add.container(1500, 300);
+    this.breakdownContainer = this.add.container(1625, 300);
     this.breakdownContainer.setDepth(4);
 
     this.breakdownHexes = [];
     this.breakdownTexts = [];
+    let resultCardCount = 3;
+    if (this.levels[this.currentLevel - 1].isMineTile) {
+      resultCardCount = 4;
+    } else {
+      resultCardCount = 3;
+    }
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < resultCardCount; i++) {
       const h = new Hex(this, 0, 0, -1, -1);
       h.embiggen();
       h.setDepth(4);
@@ -811,9 +920,16 @@ pulseAndShakeTimer() {
     this.breakdownTexts[2].setX(125);
     this.breakdownTexts[2].setText(String(this.scoreBreakdown[1]));
 
+    if (this.levels[this.currentLevel - 1].isMineTile) {
+      this.breakdownHexes[3].setType(6);
+      this.breakdownHexes[3].setX(250);
+      this.breakdownTexts[3].setX(250);
+      this.breakdownTexts[3].setText(String(this.scoreBreakdown[6]));
+    }
+
     this.tweens.add({
       targets: this.gameOverText,
-      props: { x: 1040 },
+      props: { x: 1105 },
       delay: 300,
       duration: 300,
       ease: PhaserMath.Easing.Quadratic.Out,
@@ -821,15 +937,15 @@ pulseAndShakeTimer() {
 
     this.tweens.add({
       targets: this.breakdownContainer,
-      props: { x: 1040 },
+      props: { x: 1105 },
       delay: 600,
       duration: 300,
       ease: PhaserMath.Easing.Quadratic.Out,
     });
 
     this.tweens.add({
-      targets: [this.rankText, this.nextRankText],
-      props: { x: 1040 },
+      targets: [this.rankText, this.nextRankText, this.nextLevelButton],
+      props: { x: 1105 },
       delay: 900,
       duration: 300,
       ease: PhaserMath.Easing.Quadratic.Out,
@@ -837,7 +953,7 @@ pulseAndShakeTimer() {
 
     this.tweens.add({
       targets: [this.competitionNameText, this.currentTimeText],
-      props: { x: 1040 },
+      props: { x: 1105 },
       delay: 1200,
       duration: 300,
       ease: PhaserMath.Easing.Quadratic.Out,
@@ -846,7 +962,7 @@ pulseAndShakeTimer() {
     if (isDemoGame) {
       this.tweens.add({
         targets: this.playAgainButton,
-        props: { x: 1040 },
+        props: { x: 1105 },
         delay: 1200,
         duration: 300,
         ease: PhaserMath.Easing.Quadratic.Out,
@@ -854,8 +970,8 @@ pulseAndShakeTimer() {
     }
 
     this.tweens.add({
-      targets: this.shareButton,
-      props: { x: 1040 },
+      targets: [this.shareButton],
+      props: { x: 1105 },
       delay: 1500,
       duration: 300,
       ease: PhaserMath.Easing.Quadratic.Out,
@@ -874,14 +990,9 @@ pulseAndShakeTimer() {
     this.scoreBackground?.setVisible(false);
     this.scoreBackground?.setVisible(false);
     this.timerBackground?.setVisible(false);
-    this.competitionNameText?.setVisible(false)
-    this.currentTimeText?.setVisible(false)
-
-    // this.tweens.add({
-    //   targets: this.foreground,
-    //   props: { x: 1600 },
-    //   duration: 400,
-    // });
+    this.competitionNameText?.setVisible(false);
+    this.currentTimeText?.setVisible(false);
+    this.nextLevelButton?.setVisible(false);
 
     this.time.addEvent({
       callback: this.scene.restart,
@@ -890,22 +1001,52 @@ pulseAndShakeTimer() {
     });
   }
 
+  nextRound() {
+    this.breakdownContainer?.setVisible(false);
+    this.gameOverText?.setVisible(false);
+    this.nextRankText?.setVisible(false);
+    this.rankText?.setVisible(false);
+    this.playAgainButton?.setVisible(false);
+    this.shareButton?.setVisible(false);
+    this.scoreText?.setVisible(false);
+    this.timerText?.setVisible(false);
+    this.scoreBackground?.setVisible(false);
+    this.scoreBackground?.setVisible(false);
+    this.timerBackground?.setVisible(false);
+    this.competitionNameText?.setVisible(false);
+    this.currentTimeText?.setVisible(false);
+    this.nextLevelButton?.setVisible(false);
+
+    this.time.addEvent({
+      callback: () => {
+        if (this.currentLevel < 5) {
+          this.currentLevel = (this.currentLevel || 0) + 1;
+        } else {
+          this.currentLevel = 5;
+        }
+        const dataToPass = {
+          level: this.currentLevel,
+        };
+        this.scene.restart(dataToPass);
+      },
+      delay: 500,
+    });
+  }
+
   navigateToExternalSite(url: string) {
     window.open(url, "_blank");
   }
 
- formatTime(seconds: number): string {
+  formatTime(seconds: number): string {
     // Minutes
     const minutes = Math.floor(seconds / 60);
     // Seconds
     let partInSeconds: number | string = seconds % 60;
     // Adds left zeros to seconds
-    partInSeconds = partInSeconds.toString().padStart(2, '0');
+    partInSeconds = partInSeconds.toString().padStart(2, "0");
     // Returns formated time
     return `${minutes}:${partInSeconds}`;
-}
-
-
+  }
 
   onPointerUp(event: Input.Pointer) {
     if (this.pointerDown) {

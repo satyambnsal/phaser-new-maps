@@ -131,7 +131,9 @@ export class Hex extends GameObjects.Image {
 
   setType(hexType: number) {
     this.setTexture(
-      ["empty", "windmill", "grass", "street", "center", "port-bw"][hexType]
+      ["empty", "windmill", "grass", "street", "center", "port-bw", "mine"][
+        hexType
+      ]
     );
     this.hexType = hexType;
     if (hexType === 1) {
@@ -200,6 +202,8 @@ export class Hex extends GameObjects.Image {
         this.setTexture("center-bw");
       } else if (this.hexType === 5) {
         this.setTexture("port-bw");
+      } else if (this.hexType === 6) {
+        this.setTexture("mine-bw");
       }
     } else {
       this.setAlpha(1);
@@ -220,6 +224,8 @@ export class Hex extends GameObjects.Image {
       } else if (this.hexType === 5) {
         if (this.upgraded) this.setTexture("port");
         else this.setTexture("port-bw");
+      } else if (this.hexType === 6) {
+        this.setTexture("mine-bw");
       }
     }
   }

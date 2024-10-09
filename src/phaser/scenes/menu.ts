@@ -1,3 +1,4 @@
+// import { GAME_ENTRY_FEE_KEY } from "../../constants";
 import { HexGrid } from "../hex-grid";
 import { Button } from "../util";
 import { Scene, GameObjects } from "phaser";
@@ -14,11 +15,18 @@ const tutorialTexts = [
 const tutorialTypes = [
   [1, 2, 3, 4, 5],
   [1, 2, 3, 4, 5],
+  [1, 2, 3, 4, 5],
   [3, 4, 5],
   [1],
   [2],
   [1, 2, 3, 4, 5],
 ];
+
+const currentLevel = 1;
+
+const nextSceneData = {
+  level: currentLevel,
+};
 
 export class MenuScene extends Scene {
   menu: GameObjects.Group | null = null;
@@ -82,7 +90,7 @@ export class MenuScene extends Scene {
 
       demoButtonText.on("pointerdown", () => {
         console.log("clicked");
-        this.cameras.main.pan(-1280, 0, 500, "Linear", true);
+        this.cameras.main.pan(-1405, 0, 500, "Linear", true);
         this.time.addEvent({
           delay: 500,
           callback: this.transition,
@@ -201,7 +209,7 @@ export class MenuScene extends Scene {
 
     this.tutorialPage = 0;
     this.tutorialText = this.add.bitmapText(
-      1280,
+      1405,
       200,
       "font",
       tutorialTexts[0],
@@ -218,7 +226,7 @@ export class MenuScene extends Scene {
 
     this.previousArrowBtn = new Button(
       this,
-      1370,
+      1490,
       550,
       "next_arrow",
       this.backTutorialPage.bind(this)
@@ -229,7 +237,7 @@ export class MenuScene extends Scene {
 
     this.nextArrowBtn = new Button(
       this,
-      1770,
+      1890,
       550,
       "next_arrow",
       this.nextTutorialPage.bind(this)
@@ -306,13 +314,13 @@ export class MenuScene extends Scene {
     // });
   }
 
-  async play() {
+  play() {
     const isGamePlayAllowed = this.game.registry.get("isGamePlayAllowed");
     const showGameInfoModalFn = this.game.registry.get("showGameInfoModalFn");
     if (!isGamePlayAllowed) {
       return showGameInfoModalFn();
     }
-    this.cameras.main.pan(-1280, 0, 500, "Linear", true);
+    this.cameras.main.pan(-1405, 0, 500, "Linear", true);
 
     this.time.addEvent({
       delay: 500,
@@ -327,7 +335,7 @@ export class MenuScene extends Scene {
   }
 
   transition() {
-    this.scene.start("main");
+    this.scene.start("main", nextSceneData);
   }
 
   howToPlay() {

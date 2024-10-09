@@ -75,6 +75,9 @@ export class LoadScene extends Scene {
     this.load.image("empty", "/img/empty.png");
     this.load.image("empty-hill", "/img/empty-hill.png");
 
+    this.load.image("mine", "/img/mine/mine.png");
+    this.load.image("mine-bw", "/img/mine/mine-bw.png");
+    this.load.image("mine-red", "/img/mine/mine-red.png");
     this.load.image("grass", "/img/grass.png");
     this.load.image("grass-bw", "/img/grass-bw.png");
     this.load.image("grass-red", "/img/grass-red.png");
@@ -121,12 +124,11 @@ export class LoadScene extends Scene {
     this.load.image("play-button", "/img/playBtn.png");
     this.load.image("play-again-button", "/img/play-again-button.png");
     this.load.image("how-to-play-button", "/img/howtoplay.png");
-    this.load.image('play-free-demo-button', "/img/playFreeDemo.png" )
-    this.load.image('share-score-button', "/img/shareScoreBtn.png" )
+    this.load.image("play-free-demo-button", "/img/playFreeDemo.png");
+    this.load.image("share-score-button", "/img/shareScoreBtn.png");
 
     this.load.bitmapFont("font", "/font/font.png", "/font/font.fnt");
 
-    this.load.audio("ambience", "/sfx/ambience.wav");
     this.load.audio("pop", "/sfx/pop.wav");
     this.load.audio("place", "/sfx/place.wav");
     this.load.audio("tree", "/sfx/tree.wav");
@@ -135,6 +137,9 @@ export class LoadScene extends Scene {
     this.load.audio("port", "/sfx/port.wav");
     this.load.audio("splash", "/sfx/splash.wav");
     this.load.audio("click", "/sfx/click.wav");
+    this.load.audio("digging", "/sfx/digging.mp3");
+
+    this.load.text("levels", "/data/levels.json");
   }
 
   create() {
