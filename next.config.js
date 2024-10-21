@@ -1,4 +1,3 @@
-const { withSentryConfig } = require('@sentry/nextjs');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -34,12 +33,3 @@ const nextConfig = {
     ];
   },
 }
-
-
-
-module.exports = withSentryConfig(nextConfig, {
-  org: 'satyam-bansal',
-  project: 'tileville',
-  authToken: process.env.SENTRY_AUTH_TOKEN || "",
-  silent: false
-})

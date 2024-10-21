@@ -1,4 +1,3 @@
-import { getShareScoreTwitterContent } from "@/lib/utils";
 import {
   HexGrid,
   Trihex,
@@ -58,11 +57,11 @@ export class MainScene extends Scene {
   gameOverText: GameObjects.BitmapText | null = null;
   rankText: GameObjects.BitmapText | null = null;
   nextRankText: GameObjects.BitmapText | null = null;
-  competitionNameText: GameObjects.BitmapText | null = null;
+
   currentTimeText: GameObjects.BitmapText | null = null;
   playAgainButton: GameObjects.BitmapText | null = null;
   nextLevelButton: GameObjects.BitmapText | null = null;
-  shareButton: GameObjects.Image | null = null;
+
 
   // playAgainButton: Button | null = null;
   breakdownContainer: GameObjects.Container | null = null;
@@ -566,9 +565,6 @@ export class MainScene extends Scene {
   }
 
   endGame() {
-    const isDemoGame = this.game.registry.get("isDemoGame");
-    const competitionKey = this.game.registry.get("competitionKey");
-
     const isSpeedVersion = this.game.registry.get("isSpeedVersion");
 
     if (isSpeedVersion) {
@@ -714,15 +710,7 @@ export class MainScene extends Scene {
     this.nextRankText.setOrigin(0.5);
     this.nextRankText.setDepth(4);
 
-    this.competitionNameText = this.add.bitmapText(
-      1625,
-      570,
-      "font",
-      `Competition Key: ${competitionKey}`,
-      24
-    );
-    this.competitionNameText.setOrigin(0.5);
-    this.competitionNameText.setDepth(4);
+
 
     const currentTime: string = this.getGameStartTime();
     this.currentTimeText = this.add.bitmapText(
@@ -735,53 +723,51 @@ export class MainScene extends Scene {
     this.currentTimeText.setOrigin(0.5);
     this.currentTimeText.setDepth(4);
 
-    if (isDemoGame) {
-      this.playAgainButton = this.add
-        .bitmapText(1525, 630, "font", "Play Again", 40)
-        .setInteractive({ useHandCursor: true })
-        .setOrigin(0.5)
-        .on("pointerover", () => {
-          this.tweens.add({
-            targets: this.playAgainButton,
-            scaleX: 1.1,
-            scaleY: 1.1,
-            duration: 60,
-            ease: "Linear",
-          });
+    this.playAgainButton = this.add
+      .bitmapText(1525, 630, "font", "Play Again", 40)
+      .setInteractive({ useHandCursor: true })
+      .setOrigin(0.5)
+      .on("pointerover", () => {
+        this.tweens.add({
+          targets: this.playAgainButton,
+          scaleX: 1.1,
+          scaleY: 1.1,
+          duration: 60,
+          ease: "Linear",
+        });
+      })
+      .on("pointerover", () => {
+        this.tweens.add({
+          targets: this.playAgainButton,
+          scaleX: 1.1,
+          scaleY: 1.1,
+          duration: 60,
+          ease: "Linear",
+        });
+      })
+      .on("pointerout", () =>
+        this.tweens.add({
+          targets: this.playAgainButton,
+          scaleX: 1,
+          scaleY: 1,
+          duration: 60,
+          ease: "Linear",
         })
-        .on("pointerover", () => {
-          this.tweens.add({
-            targets: this.playAgainButton,
-            scaleX: 1.1,
-            scaleY: 1.1,
-            duration: 60,
-            ease: "Linear",
-          });
-        })
-        .on("pointerout", () =>
-          this.tweens.add({
-            targets: this.playAgainButton,
-            scaleX: 1,
-            scaleY: 1,
-            duration: 60,
-            ease: "Linear",
-          })
-        )
-        .on("pointerdown", () => {
-          this.tweens.add({
-            targets: this.playAgainButton,
-            scaleX: 1.1,
-            scaleY: 1.1,
-            duration: 60,
-            ease: "Linear",
-          });
-          this.playAgain();
-        })
-        .on("pointerup", () => {
-          this.playAgain();
-        })
-        .setDepth(4);
-    }
+      )
+      .on("pointerdown", () => {
+        this.tweens.add({
+          targets: this.playAgainButton,
+          scaleX: 1.1,
+          scaleY: 1.1,
+          duration: 60,
+          ease: "Linear",
+        });
+        this.playAgain();
+      })
+      .on("pointerup", () => {
+        this.playAgain();
+      })
+      .setDepth(4);
 
     this.nextLevelButton = this.add
       .bitmapText(1525, 410, "font", "Next Round", 40)
@@ -826,55 +812,7 @@ export class MainScene extends Scene {
       })
       .setDepth(4);
 
-    this.shareButton = this.add
-      .image(1575, 700, "share-score-button")
-      .setInteractive({ useHandCursor: true })
-      .on("pointerover", () => {
-        this.tweens.add({
-          targets: this.shareButton,
-          scaleX: 1.1,
-          scaleY: 1.1,
-          duration: 60,
-          ease: "Linear",
-        });
-      })
-      .on("pointerover", () => {
-        this.tweens.add({
-          targets: this.shareButton,
-          scaleX: 1.1,
-          scaleY: 1.1,
-          duration: 60,
-          ease: "Linear",
-        });
-      })
-      .on("pointerout", () =>
-        this.tweens.add({
-          targets: this.shareButton,
-          scaleX: 1,
-          scaleY: 1,
-          duration: 60,
-          ease: "Linear",
-        })
-      )
-      .on("pointerdown", () => {
-        this.tweens.add({
-          targets: this.shareButton,
-          scaleX: 0.95,
-          scaleY: 0.95,
-          duration: 60,
-          ease: "Linear",
-        });
-        // this.navigateToExternalSite(getShareScoreTwitterContent(this.score));
-      })
-      .on("pointerup", () => {
-        const scoreTweetContent =
-          this.game.registry.get("scoreTweetContent") ||
-          "COMPETITION_SCORE_TWEET_DEFAULT_CONTENT";
-        this.navigateToExternalSite(
-          getShareScoreTwitterContent(scoreTweetContent, this.score)
-        );
-      })
-      .setDepth(4);
+
 
     this.breakdownContainer = this.add.container(1625, 300);
     this.breakdownContainer.setDepth(4);
@@ -951,31 +889,15 @@ export class MainScene extends Scene {
       ease: PhaserMath.Easing.Quadratic.Out,
     });
 
+
     this.tweens.add({
-      targets: [this.competitionNameText, this.currentTimeText],
+      targets: this.playAgainButton,
       props: { x: 1105 },
       delay: 1200,
       duration: 300,
       ease: PhaserMath.Easing.Quadratic.Out,
     });
 
-    if (isDemoGame) {
-      this.tweens.add({
-        targets: this.playAgainButton,
-        props: { x: 1105 },
-        delay: 1200,
-        duration: 300,
-        ease: PhaserMath.Easing.Quadratic.Out,
-      });
-    }
-
-    this.tweens.add({
-      targets: [this.shareButton],
-      props: { x: 1105 },
-      delay: 1500,
-      duration: 300,
-      ease: PhaserMath.Easing.Quadratic.Out,
-    });
   }
 
   playAgain() {
@@ -984,13 +906,13 @@ export class MainScene extends Scene {
     this.nextRankText?.setVisible(false);
     this.rankText?.setVisible(false);
     this.playAgainButton?.setVisible(false);
-    this.shareButton?.setVisible(false);
+
     this.scoreText?.setVisible(false);
     this.timerText?.setVisible(false);
     this.scoreBackground?.setVisible(false);
     this.scoreBackground?.setVisible(false);
     this.timerBackground?.setVisible(false);
-    this.competitionNameText?.setVisible(false);
+
     this.currentTimeText?.setVisible(false);
     this.nextLevelButton?.setVisible(false);
 
@@ -1007,13 +929,13 @@ export class MainScene extends Scene {
     this.nextRankText?.setVisible(false);
     this.rankText?.setVisible(false);
     this.playAgainButton?.setVisible(false);
-    this.shareButton?.setVisible(false);
+
     this.scoreText?.setVisible(false);
     this.timerText?.setVisible(false);
     this.scoreBackground?.setVisible(false);
     this.scoreBackground?.setVisible(false);
     this.timerBackground?.setVisible(false);
-    this.competitionNameText?.setVisible(false);
+
     this.currentTimeText?.setVisible(false);
     this.nextLevelButton?.setVisible(false);
 

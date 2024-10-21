@@ -10,7 +10,7 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
-*.local
+.next
 
 # Editor directories and files
 .vscode/*
@@ -23,3 +23,26 @@ dist-ssr
 *.sln
 *.sw?
 .vercel
+
+# NodeJS
+node_modules
+build
+coverage
+
+# Editor
+.vscode
+
+# Never commit keys to Git!
+keys
+private.md
+.turbo
+dist
+.next
+
+.next
+node_modules
+
+
+*.local
+
+

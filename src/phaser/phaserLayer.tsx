@@ -14,11 +14,6 @@ export const PhaserLayer = () => {
     };
 
     const game = new Phaser.Game(config);
-    game.registry.set("isDemoGame", true);
-    game.registry.set("isGamePlayAllowed", true);
-    game.registry.set("showGameInfoModalFn", false);
-    game.registry.set("competitionKey", 800);
-    game.registry.set("scoreTweetContent", "scoreTweetContent");
     game.registry.set("isSpeedVersion", false);
     game.registry.set("speedDuration", 200);
 
