@@ -116,6 +116,8 @@ export class LoadScene extends Scene {
     this.load.image("c-shape", "/img/c-shape.png");
     this.load.image("slash-shape", "/img/slash-shape.png");
 
+    this.load.image("hexGridBackground", "/img/map.png");
+
     this.load.spritesheet("tutorial-button", "/img/tutorial-button.png", {
       frameWidth: 811,
       frameHeight: 91,

@@ -89,6 +89,17 @@ export class MainScene extends Scene {
     bgImage.setAlpha(0.1);
     this.score = 0;
 
+    const background = this.add.image(77, 54, "hexGridBackground");
+    background.setScale(1.28)
+    background.setOrigin(0, 0);
+    // background.setDisplaySize(
+    //   this.cameras.main.width,
+    //   this.cameras.main.height
+    // );
+
+    // Ensure the background is behind other game elements
+    background.setDepth(-2);
+
     if (this.levels[this.currentLevel - 1].isMineTile) {
       this.scoreBreakdown = [0, 0, 0, 0, 0, 0, 0, 0];
     } else {
@@ -710,8 +721,6 @@ export class MainScene extends Scene {
     this.nextRankText.setOrigin(0.5);
     this.nextRankText.setDepth(4);
 
-
-
     const currentTime: string = this.getGameStartTime();
     this.currentTimeText = this.add.bitmapText(
       1625,
@@ -812,8 +821,6 @@ export class MainScene extends Scene {
       })
       .setDepth(4);
 
-
-
     this.breakdownContainer = this.add.container(1625, 300);
     this.breakdownContainer.setDepth(4);
 
@@ -889,7 +896,6 @@ export class MainScene extends Scene {
       ease: PhaserMath.Easing.Quadratic.Out,
     });
 
-
     this.tweens.add({
       targets: this.playAgainButton,
       props: { x: 1105 },
@@ -897,7 +903,6 @@ export class MainScene extends Scene {
       duration: 300,
       ease: PhaserMath.Easing.Quadratic.Out,
     });
-
   }
 
   playAgain() {

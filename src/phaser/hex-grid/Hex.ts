@@ -41,12 +41,12 @@ export class Hex extends GameObjects.Image {
     this.counted = false;
     this.upgraded = false;
 
-    this.eEdge = scene.add.image(x, y, "edge-e");
-    this.neEdge = scene.add.image(x, y, "edge-ne");
-    this.nwEdge = scene.add.image(x, y, "edge-nw");
-    this.wEdge = scene.add.image(x, y, "edge-w");
-    this.swEdge = scene.add.image(x, y, "edge-sw");
-    this.seEdge = scene.add.image(x, y, "edge-se");
+    this.eEdge = scene.add.image(222222, 222222, "edge-e");
+    this.neEdge = scene.add.image(222222, 222222, "edge-ne");
+    this.nwEdge = scene.add.image(222222, 222222, "edge-nw");
+    this.wEdge = scene.add.image(222222, 222222, "edge-w");
+    this.swEdge = scene.add.image(222222, 222222, "edge-sw");
+    this.seEdge = scene.add.image(222222, 222222, "edge-se");
     this.edges = scene.add.group([
       this.eEdge,
       this.neEdge,
