@@ -140,6 +140,11 @@ export class LoadScene extends Scene {
     this.load.audio("digging", "/sfx/digging.mp3");
 
     this.load.text("levels", "/data/levels.json");
+    this.load.tilemapTiledJSON("tileMapJson", "/data/tileMap.json");
+    this.load.image({
+      key: "tileMap",
+      url: "/img/tileMap.png",
+    });
   }
 
   create() {

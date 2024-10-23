@@ -89,6 +89,16 @@ export class MainScene extends Scene {
     bgImage.setAlpha(0.1);
     this.score = 0;
 
+    const tiledMap = this.make.tilemap({
+      key: "tileMapJson",
+      tileWidth: 140,
+      tileHeight: 140,
+    });
+
+    const tileSet = tiledMap.addTilesetImage("tileMap", "tiledMap");
+    const layer = tiledMap.createLayer("bottomLayer", tileSet as any, 0, 200);
+    layer?.setDepth(3)
+
     if (this.levels[this.currentLevel - 1].isMineTile) {
       this.scoreBreakdown = [0, 0, 0, 0, 0, 0, 0, 0];
     } else {
@@ -710,8 +720,6 @@ export class MainScene extends Scene {
     this.nextRankText.setOrigin(0.5);
     this.nextRankText.setDepth(4);
 
-
-
     const currentTime: string = this.getGameStartTime();
     this.currentTimeText = this.add.bitmapText(
       1625,
@@ -812,8 +820,6 @@ export class MainScene extends Scene {
       })
       .setDepth(4);
 
-
-
     this.breakdownContainer = this.add.container(1625, 300);
     this.breakdownContainer.setDepth(4);
 
@@ -889,7 +895,6 @@ export class MainScene extends Scene {
       ease: PhaserMath.Easing.Quadratic.Out,
     });
 
-
     this.tweens.add({
       targets: this.playAgainButton,
       props: { x: 1105 },
@@ -897,7 +902,6 @@ export class MainScene extends Scene {
       duration: 300,
       ease: PhaserMath.Easing.Quadratic.Out,
     });
-
   }
 
   playAgain() {
