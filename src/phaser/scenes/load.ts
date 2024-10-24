@@ -140,6 +140,14 @@ export class LoadScene extends Scene {
     this.load.audio("digging", "/sfx/digging.mp3");
 
     this.load.text("levels", "/data/levels.json");
+    this.load.text("game-config", "/data/game-config.json");
+
+    this.load.once("filecomplete-text-game-config", () => {
+      const gameConfig = JSON.parse(this.cache.text.get("game-config"));
+      gameConfig.forEach((asset: { name: string; url: string }) => {
+        this.load.image(asset.name, asset.url);
+      });
+    });
   }
 
   create() {

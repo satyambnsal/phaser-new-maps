@@ -58,16 +58,22 @@ export class HexGrid extends GameObjects.Group {
       }
     }
 
-    this.grid.get(0, size)?.setType(5);
-    this.grid.get(0, size)?.setAngle(-60);
-    this.grid.get(0, size * 2)?.setType(5);
+    //TODO: uncomment this code when want to make top left tile as port
+    // this.grid.get(0, size)?.setType(5);
+    // this.grid.get(0, size)?.setAngle(-60);
+    // this.grid.get(0, size * 2)?.setType(5);
 
     this.grid.get(size, 0)?.setType(5);
     this.grid.get(size, 0)?.setAngle(-120);
     this.grid.get(size, size * 2)?.setType(5);
     this.grid.get(size, size * 2)?.setAngle(60);
 
-    this.grid.get(size, size)?.setType(4);
+    //TODO: uncomment this code when want to make center tile as main tile
+    // this.grid.get(size, size)?.setType(4);
+
+    //TODO: this code is making the main tile at the port of the top left corner
+    this.grid.get(0, size)?.setType(4);
+    this.grid.get(0, size)?.setAngle(0);
 
     this.grid.get(size * 2, 0)?.setType(5);
     this.grid.get(size * 2, 0)?.setAngle(-180);

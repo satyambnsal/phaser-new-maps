@@ -1,4 +1,10 @@
 import { GameObjects } from "phaser";
+
+interface GameConfig {
+  name: string;
+  id: string;
+  url: string;
+}
 export class Hex extends GameObjects.Image {
   row: number;
   col: number;
@@ -21,6 +27,7 @@ export class Hex extends GameObjects.Image {
   seEdge: Phaser.GameObjects.Image;
   edges: Phaser.GameObjects.Group;
   propeller: Phaser.GameObjects.Image;
+  gameConfig: GameConfig[] = [];
 
   constructor(
     scene: Phaser.Scene,
@@ -29,7 +36,10 @@ export class Hex extends GameObjects.Image {
     row: number,
     col: number
   ) {
-    super(scene, x, y, "empty");
+    const tileConfigs = JSON.parse(scene.cache.text.get("game-config"));
+    const randomTileIndex = Phaser.Math.Between(0, tileConfigs.length - 1);
+    const initialTile = tileConfigs[randomTileIndex].name;
+    super(scene, x, y, initialTile);
 
     this.setScale(0.5);
     scene.add.existing(this);
