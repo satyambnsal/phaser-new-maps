@@ -62,7 +62,6 @@ export class MainScene extends Scene {
   playAgainButton: GameObjects.BitmapText | null = null;
   nextLevelButton: GameObjects.BitmapText | null = null;
 
-
   // playAgainButton: Button | null = null;
   breakdownContainer: GameObjects.Container | null = null;
   breakdownHexes: Hex[] = [];
@@ -476,12 +475,12 @@ export class MainScene extends Scene {
     deck = shuffle(deck);
     if (this.levels[this.currentLevel - 1].isMineTile) {
       for (let i = 0; i < size; i++) {
-        if (i < (3 * size) / 10) {
-          deck[i].hexes[1] = 3;
-        } else if (i < size / 2) {
-          deck[i].hexes[1] = 6;
+        if (i < (2 * size) / 10) {
+          deck[i].hexes[1] = 3; // Street
+        } else if (i < (7 * size) / 10) {
+          deck[i].hexes[1] = 6; // Mine
         } else {
-          deck[i].hexes[1] = 2;
+          deck[i].hexes[1] = 2; // Park
         }
       }
     } else {
@@ -710,8 +709,6 @@ export class MainScene extends Scene {
     this.nextRankText.setOrigin(0.5);
     this.nextRankText.setDepth(4);
 
-
-
     const currentTime: string = this.getGameStartTime();
     this.currentTimeText = this.add.bitmapText(
       1625,
@@ -812,8 +809,6 @@ export class MainScene extends Scene {
       })
       .setDepth(4);
 
-
-
     this.breakdownContainer = this.add.container(1625, 300);
     this.breakdownContainer.setDepth(4);
 
@@ -889,7 +884,6 @@ export class MainScene extends Scene {
       ease: PhaserMath.Easing.Quadratic.Out,
     });
 
-
     this.tweens.add({
       targets: this.playAgainButton,
       props: { x: 1105 },
@@ -897,7 +891,6 @@ export class MainScene extends Scene {
       duration: 300,
       ease: PhaserMath.Easing.Quadratic.Out,
     });
-
   }
 
   playAgain() {

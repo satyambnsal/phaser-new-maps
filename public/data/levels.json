@@ -1,8 +1,8 @@
 [
   {
-    "hexSize": 5,
+    "hexSize": 6,
     "hillsCount": 8,
-    "deckSize": 25,
+    "deckSize": 30,
     "isMineTile": true
   },
   {
