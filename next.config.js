@@ -1,11 +1,11 @@
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
     domains: ['oqymtqolwjujkayjyxdt.supabase.co'],
+    unoptimized: true, // Required for static export
   },
   reactStrictMode: true,
-  output: "standalone",
+  output: 'export',  // Changed from 'standalone' to 'export' for GitHub Pages
   webpack(config, options) {
     config.module.rules.push({
       test: /\.svg$/i,
@@ -17,19 +17,17 @@ const nextConfig = {
           options: { babel: false },
         },
       ],
-    })
+    });
 
-    return config
-  },
-  async headers() {
-    return [
-      {
-        source: "/(.*)",
-        headers: [
-          { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
-          { key: "Cross-Origin-Embedder-Policy", value: "require-corp" },
-        ],
-      },
-    ];
+    // Add Phaser specific configuration
+    config.module.rules.push({
+      test: /\.mjs$/,
+      include: /node_modules/,
+      type: 'javascript/auto',
+    });
+
+    return config;
   },
 }
+
+module.exports = nextConfig
