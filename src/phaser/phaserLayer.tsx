@@ -18,17 +18,16 @@ export const PhaserLayer = () => {
         const { LoadScene, MenuScene, MainScene } = await import("./scenes");
 
         const config = {
-          width: 1405,
-          height: "100%",
-          parent: "minapolis-hex",
+          width: 1280,
+          height: 780,
+          parent: "tileville-hex",
           type: Phaser.AUTO,
           scene: [LoadScene, MenuScene, MainScene],
-          transparent: true,
-          // Add scale configuration
           scale: {
-            mode: Phaser.Scale.RESIZE,
             autoCenter: Phaser.Scale.CENTER_BOTH,
+            mode: Phaser.Scale.FIT,
           },
+          transparent: true,
         };
 
         const game = new Phaser.Game(config);
@@ -48,11 +47,7 @@ export const PhaserLayer = () => {
 
   if (!isMounted) return null;
 
-  return (
-    <>
-      <div id="minapolis-hex" className="min-h-[850px]" />
-    </>
-  );
+  return <div id="tileville-hex" className="max-w-[99svh]" />;
 };
 
 export default PhaserLayer;
