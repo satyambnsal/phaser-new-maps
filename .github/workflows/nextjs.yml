@@ -8,6 +8,12 @@ on:
   push:
     branches: ["main"]
   workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch to deploy"
+        required: true
+        default: "main"
+        type: string
 
 permissions:
   contents: read
@@ -24,7 +30,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch || github.ref }}
 
+      # Rest of your existing configuration remains the same
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
         with:
