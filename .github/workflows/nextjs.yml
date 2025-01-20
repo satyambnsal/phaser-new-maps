@@ -5,8 +5,8 @@ on:
   push:
     branches:
       - main
-      - feature/*
-      - theme/*
+      - feature/**
+      - theme/**
   # Manual trigger for any branch
   workflow_dispatch:
     inputs:
