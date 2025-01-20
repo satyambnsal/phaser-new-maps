@@ -6,6 +6,9 @@ export class LoadScene extends Scene {
   }
 
   preload() {
+    this.load.baseURL =
+      process.env.NODE_ENV === "production" ? "/phaser-new-maps" : "";
+
     const progressBar = this.add.graphics();
     const progressBox = this.add.graphics();
     progressBox.fillStyle(0x000000, 0.2);
