@@ -3,7 +3,9 @@ name: Deploy Next.js site to Pages
 on:
   # Automatic deployment for main branch
   push:
-    branches: ["main"]
+    branches:
+      - main
+      - feature/*
   # Manual trigger for any branch
   workflow_dispatch:
     inputs:
