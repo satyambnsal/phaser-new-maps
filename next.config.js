@@ -6,6 +6,7 @@ const nextConfig = {
   },
   reactStrictMode: true,
   output: 'export',  // Changed from 'standalone' to 'export' for GitHub Pages
+  basePath: process.env.NODE_ENV === 'production' ? '/phaser-new-maps' : '',
   webpack(config, options) {
     config.module.rules.push({
       test: /\.svg$/i,
