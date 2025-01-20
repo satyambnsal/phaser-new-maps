@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - feature/*
+      - theme/*
   # Manual trigger for any branch
   workflow_dispatch:
     inputs:
