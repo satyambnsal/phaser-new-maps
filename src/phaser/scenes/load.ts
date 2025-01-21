@@ -100,6 +100,11 @@ export class LoadScene extends Scene {
     this.load.image("windmill-bw", "/img/windmill-bw.png");
     this.load.image("windmill-hill-bw", "/img/windmill-hill-bw.png");
     this.load.image("port-bw", "/img/port.png");
+
+    this.load.image("rock", "/img/rock/rock.png");
+    this.load.image("rock-bw", "/img/rock/rock-bw.png");
+    this.load.image("rock-red", "/img/rock/rock-red.png");
+
     this.load.spritesheet("port", "/img/port-color.png", {
       frameWidth: 140,
       frameHeight: 140,
