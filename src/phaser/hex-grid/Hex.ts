@@ -131,9 +131,16 @@ export class Hex extends GameObjects.Image {
 
   setType(hexType: number) {
     this.setTexture(
-      ["empty", "windmill", "grass", "street", "center", "port-bw", "mine"][
-        hexType
-      ]
+      [
+        "empty",
+        "windmill",
+        "grass",
+        "street",
+        "center",
+        "port-bw",
+        "mine",
+        "rock",
+      ][hexType]
     );
     this.hexType = hexType;
     if (hexType === 1) {
@@ -156,6 +163,8 @@ export class Hex extends GameObjects.Image {
       this.puffer.setParticleTint(0xae482c);
     } else if (hexType === 5) {
       this.puffer.setParticleTint(0x3b80a6);
+    } else if (hexType === 7) {
+      this.puffer.setParticleTint(0x808080);
     }
 
     if (hexType === 5) {
