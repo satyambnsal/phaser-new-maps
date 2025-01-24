@@ -21,7 +21,7 @@ export class ScorePopper extends GameObjects.BitmapText {
       ySum / hexes.length,
       "font",
       points > 0 ? "+" + String(points) : String(points),
-      40
+      40 // Font size
     );
     scene.add.existing(this);
     this.points = points;
