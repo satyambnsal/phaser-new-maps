@@ -104,6 +104,9 @@ export class MainScene extends Scene {
       0,
       this.onNewPoints.bind(this)
     );
+
+    this.grid.placeRocks(2);
+
     this.trihexDeck = this.createTrihexDeck(
       this.levels[this.currentLevel - 1].deckSize,
       true

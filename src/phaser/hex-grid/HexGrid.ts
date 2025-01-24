@@ -118,6 +118,57 @@ export class HexGrid extends GameObjects.Group {
     });
   }
 
+  placeRocks(count = 4) {
+    let placed = 0;
+    const centerHex = this.grid.get(this.size, this.size);
+
+    while (placed < count) {
+      const r = Math.floor(Math.random() * (this.size + this.size + 1));
+      const c = Math.floor(Math.random() * (this.size + this.size + 1));
+
+      const hex = this.grid.get(r, c);
+      if (hex && this.canPlaceRock(r, c)) {
+        hex.setType(7); // Set as rock
+        placed++;
+      }
+    }
+
+    this.updateEdges();
+  }
+
+  canPlaceRock(row: number, col: number): boolean {
+    const hex = this.grid.get(row, col);
+    if (!hex) return false;
+
+    // Check rules
+    if (hex.hexType !== 0) return false; // Must be empty
+    if (hex.hasHill) return false; // Can't be on hills
+
+    // Check if on edge
+    const isEdge =
+      row === 0 || row === this.size * 2 || col === 0 || col === this.size * 2;
+    if (isEdge) return false;
+
+    // Check adjacent rocks
+    for (const neighbor of this.neighbors(row, col)) {
+      if (neighbor?.hexType === 7) return false;
+    }
+
+    return true;
+  }
+
+  isBuildable(row: number, col: number): boolean {
+    const hex = this.grid.get(row, col);
+    if (!hex) return false;
+
+    // Check if adjacent to rocks
+    for (const neighbor of this.neighbors(row, col)) {
+      if (neighbor?.hexType === 7) return false;
+    }
+
+    return true;
+  }
+
   updateEdges() {
     for (let r = 0; r < this.size + this.size + 1; r++) {
       for (let c = 0; c < this.size + this.size + 1; c++) {
@@ -244,17 +295,51 @@ export class HexGrid extends GameObjects.Group {
           for (const offsets of (shapes as any)[rotation]) {
             const r = hex.row + offsets.ro;
             const c = hex.col + offsets.co;
+
+            // First check if the hex exists and is empty
             if (!(this.grid.has(r, c) && this.grid.get(r, c)?.hexType === 0)) {
               canPlaceHere = false;
+              break;
+            }
+
+            // Then check for rock adjacency
+            const testHex = this.grid.get(r, c);
+            if (testHex) {
+              for (const neighbor of this.neighbors(r, c)) {
+                if (neighbor?.hexType === 7) {
+                  canPlaceHere = false;
+                  break;
+                }
+              }
             }
           }
-          if (canPlaceHere) return true;
+
+          // Also check if at least one hex touches a non-empty tile
+          if (canPlaceHere) {
+            let hasTouching = false;
+            for (const offsets of (shapes as any)[rotation]) {
+              const r = hex.row + offsets.ro;
+              const c = hex.col + offsets.co;
+              for (const n of this.neighbors(r, c)) {
+                if (
+                  n &&
+                  (n.hexType === 1 ||
+                    n.hexType === 2 ||
+                    n.hexType === 3 ||
+                    n.hexType === 4)
+                ) {
+                  hasTouching = true;
+                  break;
+                }
+              }
+            }
+            if (hasTouching) return true;
+          }
         }
       }
     }
     return false;
   }
-
   neighbors(row: number, col: number) {
     return [
       this.grid.get(row, col + 1),
@@ -328,9 +413,16 @@ export class HexGrid extends GameObjects.Group {
     ) {
       for (let i = 0; i < 3; i++) {
         this.triPreviews[i].setTexture(
-          ["white", "windmill-bw", "grass-bw", "street-bw", "", "", "mine-bw"][
-            trihex.hexes[i]
-          ]
+          [
+            "white",
+            "windmill-bw",
+            "grass-bw",
+            "street-bw",
+            "",
+            "",
+            "mine-bw",
+            "rock-bw",
+          ][trihex.hexes[i]]
         );
       }
     } else {
@@ -344,6 +436,7 @@ export class HexGrid extends GameObjects.Group {
             "",
             "",
             "mine-red",
+            "rock-red",
           ][trihex.hexes[i]]
         );
       }
@@ -367,15 +460,27 @@ export class HexGrid extends GameObjects.Group {
     const c = getCol(x, y);
 
     const hexes: Hex[] = [];
-    console.log({ r, c, trihex });
     let touching = false;
+
     for (let i = 0; i < 3; i++) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const offsets = (shapes as any)[trihex.shape][i];
-      hexes.push(this.grid.get(r + offsets.ro, c + offsets.co)!);
+      const row = r + offsets.ro;
+      const col = c + offsets.co;
+
+      // Check if any hex would be placed adjacent to rocks
+      const hex = this.grid.get(row, col);
+      if (hex) {
+        for (const neighbor of this.neighbors(row, col)) {
+          if (neighbor?.hexType === 7) {
+            return false; // Can't build next to rocks
+          }
+        }
+      }
+
+      hexes.push(this.grid.get(row, col)!);
 
       if (!touching) {
-        for (const n of this.neighbors(r + offsets.ro, c + offsets.co)) {
+        for (const n of this.neighbors(row, col)) {
           if (
             n &&
             (n.hexType === 1 ||
@@ -389,6 +494,7 @@ export class HexGrid extends GameObjects.Group {
         }
       }
     }
+
     if (
       touching &&
       hexes[0] &&
@@ -466,49 +572,64 @@ export class HexGrid extends GameObjects.Group {
     if (hex.counted) return;
 
     if (hex.hexType === 1) {
+      // Windmill
       let isolated = true;
-      for (const h of this.neighbors(hex.row, hex.col)) {
-        if (h && h.hexType === 1) {
+      let rockPenalty = 0;
+
+      // Check for rocks within 2 hexes (rock penalty)
+      for (let r = hex.row - 2; r <= hex.row + 2; r++) {
+        for (let c = hex.col - 2; c <= hex.col + 2; c++) {
+          const nearby = this.grid.get(r, c);
+          if (nearby?.hexType === 7) {
+            rockPenalty = -1;
+            break;
+          }
+        }
+      }
+
+      // Check isolation
+      for (const n of this.neighbors(hex.row, hex.col)) {
+        if (n?.hexType === 1) {
           isolated = false;
-          if (h.counted) {
-            h.counted = false;
+          if (n.counted) {
+            n.counted = false;
             this.scoreQueue.enq(
-              new ScorePopper(this.scene, [h], h.hasHill ? -3 : -1)
+              new ScorePopper(this.scene, [n], n.hasHill ? -3 : -1)
             );
           }
         }
       }
+
       if (isolated) {
+        const basePoints = hex.hasHill ? 3 : 1;
         this.scoreQueue.enq(
-          new ScorePopper(this.scene, [hex], hex.hasHill ? 3 : 1)
+          new ScorePopper(this.scene, [hex], basePoints + rockPenalty)
         );
         hex.counted = true;
       }
     } else if (hex.hexType === 2) {
+      // Parks
       const group = this.getConnected(hex);
-      const uncountedParks = [];
-      for (const park of group) {
-        if (!park.counted) uncountedParks.push(park);
-      }
+      const uncountedParks = group.filter((p) => !p.counted);
+
       while (uncountedParks.length >= 3) {
         const newParks = uncountedParks.splice(0, 3);
-        newParks[0].counted = true;
-        newParks[1].counted = true;
-        newParks[2].counted = true;
+        newParks.forEach((p) => (p.counted = true));
         this.scoreQueue.enq(new ScorePopper(this.scene, newParks, 5));
       }
     } else if (hex.hexType === 3) {
-      for (const h of this.neighbors(hex.row, hex.col)) {
-        if (h && h.hexType === 4 && !hex.counted) {
+      // Streets
+      // Handle street scoring
+      for (const n of this.neighbors(hex.row, hex.col)) {
+        if (n?.hexType === 4 && !hex.counted) {
           this.scoreQueue.enq(new ScorePopper(this.scene, [hex], 1));
           hex.counted = true;
         }
       }
+
       const group = this.getConnected(hex);
-      let connectedToCenter = false;
-      for (const h of group) {
-        if (h.hexType === 3 && h.counted) connectedToCenter = true;
-      }
+      const connectedToCenter = group.some((h) => h.hexType === 3 && h.counted);
+
       if (connectedToCenter) {
         for (const h of group) {
           if (!h.counted) {
@@ -520,48 +641,32 @@ export class HexGrid extends GameObjects.Group {
         }
       }
     } else if (hex.hexType === 6) {
-      // Mine tile
+      // Mines
+      // Handle mine scoring (existing implementation)
       let adjacentToConnectedStreet = false;
-
-      // Check if adjacent to a connected street
-      for (const neighbor of this.neighbors(hex.row, hex.col)) {
-        if (neighbor && neighbor.hexType === 3 && neighbor.counted) {
+      for (const n of this.neighbors(hex.row, hex.col)) {
+        if (n?.hexType === 3 && n.counted) {
           adjacentToConnectedStreet = true;
           break;
         }
       }
 
       if (adjacentToConnectedStreet && !hex.counted) {
-        // Get connected mines
         const connectedMines = this.getConnected(hex, true).filter(
-          (mine) => mine.hexType === 6
+          (m) => m.hexType === 6
         );
+        const countedMines = connectedMines.filter((m) => m.counted).length;
+        const isNPlus3rdMine = (countedMines + 1) % 3 === 0;
 
-        // Count how many mines in this network are already counted
-        const countedMinesInNetwork = connectedMines.filter(
-          (mine) => mine.counted
-        ).length;
-
-        // Determine if this mine is an n+3rd mine (3rd, 6th, 9th, etc.)
-        const isNPlus3rdMine = (countedMinesInNetwork + 1) % 3 === 0;
-
-        // Award points
-        const basePoints = 2;
-        const bonusPoints = isNPlus3rdMine ? 5 : 0;
-        const totalPoints = basePoints + bonusPoints;
-
+        const totalPoints = 2 + (isNPlus3rdMine ? 5 : 0);
         this.scoreQueue.enq(new ScorePopper(this.scene, [hex], totalPoints));
         hex.counted = true;
 
-        if (isNPlus3rdMine) {
-          hex.upgraded = true; // Mark as part of an Industrial Network
-        }
+        if (isNPlus3rdMine) hex.upgraded = true;
 
-        // Recursively check other uncounted mines in the network
-        for (const connectedMine of connectedMines) {
-          if (!connectedMine.counted) {
-            this.getPointsFor(connectedMine);
-          }
+        // Score other connected mines
+        for (const mine of connectedMines) {
+          if (!mine.counted) this.getPointsFor(mine);
         }
       }
     }

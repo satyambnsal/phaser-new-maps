@@ -19,7 +19,7 @@ export const PhaserLayer = () => {
 
         const config = {
           width: 1280,
-          height: 780,
+          height: "100%",
           parent: "tileville-hex",
           type: Phaser.AUTO,
           scene: [LoadScene, MenuScene, MainScene],
@@ -47,7 +47,13 @@ export const PhaserLayer = () => {
 
   if (!isMounted) return null;
 
-  return <div id="tileville-hex" className="max-w-[99svh]" />;
+  return (
+    <div
+      id="tileville-hex"
+      className="min-h-[100vh] max-w-[99svh]"
+      style={{ minHeight: "100svh" }}
+    />
+  );
 };
 
 export default PhaserLayer;
