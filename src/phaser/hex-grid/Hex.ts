@@ -21,6 +21,8 @@ export class Hex extends GameObjects.Image {
   seEdge: Phaser.GameObjects.Image;
   edges: Phaser.GameObjects.Group;
   propeller: Phaser.GameObjects.Image;
+  spaceStation: Phaser.GameObjects.Image | null = null;
+  // crystalGlow: Phaser.GameObjects.Particles.ParticleEmitter | null = null;
 
   constructor(
     scene: Phaser.Scene,
@@ -40,6 +42,7 @@ export class Hex extends GameObjects.Image {
     this.hasHill = false;
     this.counted = false;
     this.upgraded = false;
+    this.spaceStation = null;
 
     this.eEdge = scene.add.image(x, y, "edge-e");
     this.neEdge = scene.add.image(x, y, "edge-ne");
@@ -100,6 +103,9 @@ export class Hex extends GameObjects.Image {
     this.swEdge.setX(x);
     this.seEdge.setX(x);
     this.propeller.setX(x);
+    if (this.spaceStation) {
+      this.spaceStation.setX(x);
+    }
     return this;
   }
 
@@ -112,6 +118,9 @@ export class Hex extends GameObjects.Image {
     this.swEdge.setY(y);
     this.seEdge.setY(y);
     this.propeller.setY(y);
+    if (this.spaceStation) {
+      this.spaceStation.setY(y);
+    }
     return this;
   }
 
@@ -158,6 +167,26 @@ export class Hex extends GameObjects.Image {
       this.puffer.setParticleTint(0x3b80a6);
     }
 
+    if (hexType === 4 && !this.spaceStation) {
+      this.spaceStation = this.scene.add.image(
+        this.x + 4,
+        this.y - 6,
+        "space-center"
+      );
+      this.spaceStation.setScale(0.5);
+      this.spaceStation.setDepth(4);
+
+      // Add floating animation
+      this.scene.tweens.add({
+        targets: this.spaceStation,
+        y: "+=8",
+        duration: 2000,
+        yoyo: true,
+        repeat: -1,
+        ease: "Sine.easeInOut",
+      });
+    }
+
     if (hexType === 5) {
       this.eEdge.setVisible(false);
       this.neEdge.setVisible(false);
@@ -171,6 +200,44 @@ export class Hex extends GameObjects.Image {
   setHill(hasHill: boolean) {
     this.hasHill = hasHill;
     if (hasHill) this.setTexture("empty-hill");
+    //   this.crystalGlow = this.scene.add.particles(0, 0, "particle", {
+    //     lifespan: 2000,
+    //     speed: { min: 1, max: 3 },
+    //     scale: { start: 0.4, end: 0 },
+    //     quantity: 300,
+    //     frequency: 1000, // Emit a particle every 200ms
+    //     alpha: { start: 0.2, end: 0.4 },
+    //     tint: 0x00ff99, // Greenish tint for the glow
+    //     emitting: true,
+    //     emitZone: {
+    //       type: "random",
+    //       source: new Phaser.Geom.Circle(1, 1, 30),
+    //     },
+    //   });
+
+    //   this.crystalGlow.setPosition(this.x, this.y);
+    //   this.crystalGlow.setDepth(1.5); // Between hex and edges
+
+    //   // Add a pulsing glow effect using tweens
+    //   this.scene.tweens.add({
+    //     targets: this,
+    //     alpha: 0.85,
+    //     duration: 1500,
+    //     yoyo: true,
+    //     repeat: -1,
+    //     ease: "Sine.easeInOut",
+    //   });
+
+    //   // Add a subtle scale pulse
+    //   this.scene.tweens.add({
+    //     targets: this,
+    //     scaleX: this.scaleX * 1.05,
+    //     scaleY: this.scaleY * 1.05,
+    //     duration: 2000,
+    //     yoyo: true,
+    //     repeat: -1,
+    //     ease: "Sine.easeInOut",
+    //   });
   }
 
   upgrade() {
